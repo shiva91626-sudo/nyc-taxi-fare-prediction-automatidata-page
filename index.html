@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NYC Taxi Fare Prediction – Automatidata Project</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    :root {
+      --primary: #0f766e;
+      --primary-soft: #14b8a6;
+      --primary-light: #e0f2f1;
+      --text-dark: #0f172a;
+      --text-muted: #64748b;
+      --bg-page: #f8fcfc;
+      --white: #ffffff;
+      --border-light: #e2e8f0;
+      --radius: 20px;
+      --shadow-soft: 0 20px 40px rgba(15,118,110,0.12);
+      --shadow-hover: 0 25px 50px rgba(15,118,110,0.20);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, var(--bg-page) 0%, #e6f4f1 100%);
+      color: var(--text-dark);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* HERO HEADER */
+    header.hero {
+      position: relative;
+      overflow: hidden;
+      color: #f9fafb;
+      text-align: center;
+      min-height: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    header.hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: url("image/NYC-HERO.png");
+      background-size: cover;
+      background-position: center;
+      filter: brightness(0.75) contrast(1.1);
+      z-index: -2;
+      animation: heroZoom 20s ease-in-out infinite alternate;
+    }
+
+    @keyframes heroZoom {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.05); }
+    }
+
+    header.hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(15,118,110,0.65), rgba(15,23,42,0.85));
+      z-index: -1;
+    }
+
+    .hero-content {
+      max-width: 800px;
+      padding: 3.5rem 2rem 3rem;
+      animation: fadeUp 1s ease-out both, float 6s ease-in-out infinite;
+      position: relative;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .hero-content h1 {
+      font-size: clamp(2.8rem, 5vw, 3.5rem);
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+      text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .hero-content p {
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+      font-weight: 300;
+    }
+
+    .hero-meta {
+      font-size: 1rem;
+      margin-bottom: 2rem;
+      color: var(--primary-light);
+      font-weight: 400;
+      opacity: 0.95;
+    }
+
+    .hero-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem 2.2rem;
+      border-radius: 50px;
+      background: rgba(255,255,255,0.95);
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 1rem;
+      border: none;
+      box-shadow: 0 16px 40px rgba(255,255,255,0.3);
+      backdrop-filter: blur(20px);
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .hero-btn:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 24px 50px rgba(255,255,255,0.4);
+      background: #ffffff;
+    }
+
+    /* MAIN LAYOUT */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 4rem 2rem 5rem;
+    }
+
+    .section-card {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      border-radius: var(--radius);
+      padding: 3rem 2.5rem;
+      margin-top: 3rem;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(255,255,255,0.3);
+      opacity: 0;
+      transform: translateY(40px) scale(0.98);
+      transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .section-card.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      color: var(--text-dark);
+    }
+
+    .section-title::before {
+      content: "";
+      width: 5px;
+      height: 28px;
+      border-radius: 3px;
+      background: linear-gradient(180deg, var(--primary-soft), var(--primary));
+      box-shadow: 0 0 10px var(--primary-soft);
+    }
+
+    p {
+      font-size: 1rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+
+    ul {
+      margin: 1rem 0 0 1.5rem;
+      color: var(--text-dark);
+      font-size: 1rem;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+      padding-left: 0.3rem;
+      transition: color 0.3s ease;
+    }
+
+    li:hover {
+      color: var(--primary);
+    }
+
+    /* LINKS ROW */
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-top: 2rem;
+    }
+
+    .links a {
+      font-size: 0.9rem;
+      font-weight: 500;
+      border-radius: 50px;
+      padding: 0.7rem 1.5rem;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .links a:hover {
+      background: linear-gradient(135deg, var(--primary), var(--primary-soft));
+      color: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(15,118,110,0.3);
+    }
+
+    /* METRICS */
+    .metrics-list li strong {
+      color: var(--primary);
+      font-size: 1.1rem;
+      background: linear-gradient(135deg, var(--primary-light), #ccfbf1);
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    /* CHARTS & SCREENSHOTS */
+    .charts-row, .screenshot-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-top: 2.5rem;
+    }
+
+    .charts-row img, .screenshot-grid img {
+      width: 100%;
+      height: 340px;
+      object-fit: contain;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #ffffff, #f0fdfa);
+      border: 2px solid var(--border-light);
+      box-shadow: 0 12px 30px rgba(15,118,110,0.15);
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      cursor: pointer;
+    }
+
+    .charts-row img:hover, .screenshot-grid img:hover {
+      transform: translateY(-12px) scale(1.02);
+      box-shadow: 0 30px 60px rgba(15,118,110,0.25);
+      border-color: var(--primary-soft);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      main {
+        padding: 2.5rem 1.5rem 4rem;
+      }
+      
+      .section-card {
+        padding: 2rem 1.8rem;
+        margin-top: 2.5rem;
+      }
+      
+      .hero {
+        min-height: 380px;
+      }
+      
+      .links {
+        flex-direction: column;
+      }
+      
+      .links a {
+        text-align: center;
+        padding: 1rem 2rem;
+      }
+    }
+
+    /* IMPROVED FOOTER */
+    footer {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+      color: #e2e8f0;
+      position: relative;
+      overflow: hidden;
+      margin-top: 6rem;
+    }
+
+    footer::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, var(--primary-soft) 50%, transparent 100%);
+      box-shadow: 0 0 20px rgba(20, 184, 166, 0.3);
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 4rem 2rem 3rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2.5rem;
+    }
+
+    .footer-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 2rem;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .footer-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--primary-soft));
+    }
+
+    .footer-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 30px 60px rgba(15, 118, 110, 0.25);
+      border-color: rgba(20, 184, 166, 0.3);
+    }
+
+    .footer-card h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .footer-card h3 i {
+      color: var(--primary-soft);
+      font-size: 1.3rem;
+      width: 24px;
+    }
+
+    .footer-card a {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.8rem 0;
+      color: #cbd5e1;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      border-radius: 12px;
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-card a:hover {
+      color: #ffffff;
+      background: rgba(20, 184, 166, 0.1);
+      transform: translateX(8px);
+      padding-left: 1.2rem;
+    }
+
+    .footer-card a i {
+      color: var(--primary-soft);
+      font-size: 1.1rem;
+      width: 20px;
+      transition: transform 0.3s ease;
+    }
+
+    .footer-card a:hover i {
+      transform: scale(1.1);
+    }
+
+    .footer-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      margin: 2.5rem 2rem;
+    }
+
+    .footer-bottom {
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(20px);
+      text-align: center;
+      padding: 1.5rem 2rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .footer-bottom p {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      font-weight: 400;
+      margin: 0;
+    }
+
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .social-links a {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #cbd5e1;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .social-links a:hover {
+      background: linear-gradient(135deg, var(--primary), var(--primary-soft));
+      color: #ffffff;
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 0 12px 30px rgba(15,118,110,0.4);
+    }
+
+    /* Mobile Footer */
+    @media (max-width: 768px) {
+      .footer-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 2.5rem 1.5rem 2rem;
+      }
+      
+      .footer-card {
+        padding: 1.8rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-content">
+      <h1>NYC Taxi Fare Prediction</h1>
+      <p>Machine Learning &amp; BI Case Study</p>
+      <p class="hero-meta">By Akash Raj · Automatidata Project</p>
+      <button class="hero-btn" onclick="document.getElementById('overview').scrollIntoView({behavior:'smooth'})">
+        <i class="fas fa-arrow-down"></i> View Project
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- PROJECT OVERVIEW + DATA -->
+    <section id="overview" class="section-card">
+      <h2 class="section-title"><i class="fas fa-info-circle"></i> Project Overview</h2>
+      <p>
+        NYC taxi passengers lack fare transparency before starting a ride. Fare variability driven by distance, duration,
+        traffic, and data anomalies creates uncertainty for riders and operational challenges for pricing systems.
+      </p>
+
+      <h3 style="margin-top:1.8rem; font-size:1.2rem; color:var(--text-dark);">Data</h3>
+      <ul>
+        <li>NYC Taxi &amp; Limousine Commission historical trip records.</li>
+        <li>Features: distance, duration, passenger count, payment type, tolls.</li>
+        <li>Major issues: unrealistic fares, zero‑distance trips, anomalies.</li>
+      </ul>
+
+      <div class="links">
+        <a href="https://github.com/shiva91626-sudo/nyc-taxi-fare-prediction-automatidata" target="_blank">GitHub Repository</a>
+        <a href="https://public.tableau.com/views/AutomatidataNYCTaxifarePrediction/ModelPerformanceDashboard" target="_blank">Tableau Dashboard</a>
+        
+        <a href="https://drive.google.com/file/d/1oS44fyXrobVrAjG7LYzrzgPeoMTywxUx/view" target="_blank">Power BI File</a>
+        <a href="https://drive.google.com/drive/folders/1rkqSPvNp5GiqdT-JNXodF7OXztCva-7k" target="_blank">All Reports</a>
+        <a href="https://drive.google.com/file/d/1CTNShtEWoSN6I9NzC2WiOW4F8gD5K7v6/view" target="_blank">Case Study</a>
+        <a href="https://www.linkedin.com/posts/akash-raj-dataanalytics_automatidata-nyc-taxi-fare-prediction-activity-7409516187870638080-HrVh" target="_blank">LinkedIn Post</a>
+      </div>
+    </section>
+
+    <!-- APPROACH + MODEL -->
+    <section id="model" class="section-card">
+      <h2 class="section-title"><i class="fas fa-brain"></i> Modeling & Statistical Validation</h2>
+      <p>
+        Random Forest Regression was selected to capture non‑linear pricing patterns after linear models failed variance
+        and residual diagnostics.
+      </p>
+
+      <h3 style="margin-top:1.8rem; font-size:1.2rem; color:var(--text-dark);">Approach</h3>
+      <ul>
+        <li>Exploratory Data Analysis to validate pricing behavior.</li>
+        <li>Anomaly detection using fare‑per‑mile and duration logic.</li>
+        <li>Feature engineering for model stability.</li>
+        <li>OLS regression used only as diagnostic validation.</li>
+      </ul>
+
+      <h3 style="margin-top:1.8rem; font-size:1.2rem; color:var(--text-dark);">Model Performance</h3>
+      <ul class="metrics-list">
+        <li><strong>R²</strong>: 0.974</li>
+        <li><strong>MAE</strong>: 0.43</li>
+        <li><strong>RMSE</strong>: 1.71</li>
+      </ul>
+
+      <div class="charts-row">
+        <img src="Model/Actual_vs_Predicted.png" alt="Actual vs Predicted">
+        <img src="Model/model_performance_comparison.png" alt="Model Performance Comparison">
+      </div>
+    </section>
+
+    <!-- POWER BI ANALYTICS -->
+    <section id="bi" class="section-card">
+      <h2 class="section-title"><i class="fas fa-chart-line"></i> Interactive Power BI Analytics</h2>
+      <p>
+        Power BI was used for deep-dive analysis, error diagnostics, decomposition trees, tooltips, and executive insights.
+      </p>
+
+      <div class="screenshot-grid">
+        <img src="Dashboard/Power BI/Screenshots/Dashboard.png" alt="Dashboard">
+        <img src="Dashboard/Power BI/Screenshots/Deep Dive.png" alt="Deep Dive">
+      </div>
+
+      <div class="screenshot-grid">
+        <img src="Dashboard/Power BI/Screenshots/Key Insights.png" alt="Key Insights">
+        <img src="Dashboard/Power BI/Screenshots/Tooltip.png" alt="Tooltip">
+      </div>
+    </section>
+
+    <!-- TABLEAU SECTION -->
+    <section id="tableau" class="section-card">
+      <h2 class="section-title"><i class="fas fa-table"></i> Tableau – Model Validation</h2>
+      <p>
+        Tableau was used to validate the model on the testing dataset using
+        <em>Actual vs Predicted trends</em>, <em>Distribution checks</em>, and <em>Error variance</em>.
+      </p>
+
+      <div class="screenshot-grid">
+        <img src="Dashboard/Tableau/Screenshots/Key details.png" alt="Key Details">
+        <img src="Dashboard/Tableau/Screenshots/Model Evaluation Dashboard.png" alt="Model Evaluation">
+      </div>
+    </section>
+
+    <!-- KEY INSIGHTS -->
+    <section id="insights" class="section-card">
+      <h2 class="section-title"><i class="fas fa-lightbulb"></i> Key Insights</h2>
+      <ul>
+        <li>Data quality directly determines model reliability.</li>
+        <li>Non‑linear models better reflect real-world pricing.</li>
+        <li>Long-distance trips (20+ miles) contribute the highest errors.</li>
+        <li>High-fare rides show more prediction variance.</li>
+        <li>Duration & distance heavily influence fare uncertainty.</li>
+        <li>Credit card payments dominate and include almost all tipping behavior.</li>
+      </ul>
+    </section>
+
+    <!-- BUSINESS RECOMMENDATIONS -->
+    <section id="recommendations" class="section-card">
+      <h2 class="section-title"><i class="fas fa-rocket"></i> Business Recommendations</h2>
+      <ul>
+        <li>Promote Credit Card payments to increase tipping and driver earnings.</li>
+        <li>Implement anomaly detection (QC rules) for fares, distance &amp; duration.</li>
+        <li>Introduce upfront-pricing for 20+ mile trips to reduce uncertainty.</li>
+        <li>Strengthen peak-hour operations (Morning &amp; Evening).</li>
+        <li>Target Medium Fare riders (20–60) for loyalty and repeat campaigns.</li>
+      </ul>
+    </section>
+  </main>
+
+  <!-- IMPROVED FOOTER -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-card">
+        <h3><i class="fas fa-envelope"></i> Get In Touch</h3>
+        <a href="mailto:akashraj.dev@outlook.com">
+          <i class="fas fa-envelope"></i>
+          akashraj.dev@outlook.com
+        </a>
+        <a href="https://wa.me/918789388911" target="_blank">
+          <i class="fab fa-whatsapp"></i>
+          WhatsApp: +91 87893 88911
+        </a>
+      </div>
+
+      <div class="footer-card">
+        <h3><i class="fas fa-map-marker-alt"></i> Location</h3>
+        <p style="color: #cbd5e1; line-height: 1.6; margin-bottom: 1rem;">
+          Govindpuram, Ghaziabad, India
+        </p>
+        <p style="color: #94a3b8; font-size: 0.9rem;">
+          Ready for opportunities worldwide 🌍
+        </p>
+      </div>
+
+      <div class="footer-card">
+        <h3><i class="fas fa-link"></i> Quick Links</h3>
+        <a href="#"><i class="fas fa-home"></i> Portfolio Home</a>
+        <a href="https://github.com/shiva91626-sudo" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+        <a href="https://linkedin.com" target="_blank"><i class="fab fa-linkedin"></i> LinkedIn</a>
+      </div>
+    </div>
+
+    <div class="footer-divider"></div>
+
+    <div class="footer-bottom">
+      <p>© 2025 Akash Raj – NYC Taxi Fare Prediction | Automatidata Project</p>
+      <div class="social-links">
+        <a href="https://linkedin.com" target="_blank" aria-label="LinkedIn">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+        <a href="https://github.com/shiva91626-sudo" target="_blank" aria-label="GitHub">
+          <i class="fab fa-github"></i>
+        </a>
+        <a href="https://wa.me/918789388911" target="_blank" aria-label="WhatsApp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Enhanced scroll animations
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry, index) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => {
+              entry.target.classList.add("visible");
+            }, index * 100);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    document.querySelectorAll(".section-card").forEach((sec) => observer.observe(sec));
+
+    // Smooth scroll for all links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Footer card hover animation
+    document.querySelectorAll('.footer-card').forEach((card, index) => {
+      card.style.transitionDelay = `${index * 0.1}s`;
+    });
+  </script>
+</body>
+</html>
